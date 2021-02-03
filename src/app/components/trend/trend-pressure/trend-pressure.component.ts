@@ -36,8 +36,6 @@ export class TrendPressureComponent implements OnInit {
       })
 
       this.drawTrend(data);
-
-      console.log(data);
     });
   }
 
