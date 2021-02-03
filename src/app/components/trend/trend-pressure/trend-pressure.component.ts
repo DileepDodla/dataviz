@@ -8,12 +8,11 @@ import * as d3 from 'd3';
 })
 export class TrendPressureComponent implements OnInit {
 
-  private svg;
-  private margin;
-  private height;
-  private width;
-
-  private date;
+  private svg: d3.Selection<SVGElement, {}, HTMLElement, any>;
+  private margin: number;
+  private height: number;
+  private width: number;
+  private date: string;
 
   constructor() {
     this.margin = 60;
@@ -22,24 +21,36 @@ export class TrendPressureComponent implements OnInit {
   }
 
   ngOnInit(): void {
+
     this.createSvg();
+
+    // Loads csv and gets the data to draw trend graph
     d3.csv("assets/data.csv").then(data => {
+
+      // Gets date from the data
       this.date = data[0].Time.split(" ")[0];
+
+      // Preprocess the time field
       data.forEach(d => {
-        d.Time = this.convertFrom24To12Format(d.Time.split(" ")[1]);
+        d.Time = d.Time.split(" ")[1].slice(0, 2);
       })
+
       this.drawTrend(data);
+
+      console.log(data);
     });
   }
 
-  private convertFrom24To12Format(time24) {
-    const [sHours, minutes] = time24.match(/([0-9]{1,2}):([0-9]{2})/).slice(1);
-    const period = +sHours < 12 ? 'AM' : 'PM';
-    const hours = +sHours % 12 || 12;
+  // Converts & returns time in 24hr format string to 12hr format string
+  private convertFrom24To12Format(time24: string): string {
+    const sHours: string = time24.slice(0, 2);
+    const period: string = +sHours < 12 ? 'AM' : 'PM';
+    const hours: number = +sHours % 12 || 12;
 
     return `${hours}${period}`;
   }
 
+  // Creates an svg element for hour vs pressure
   private createSvg(): void {
     this.svg = d3.select("figure#trend-pressure")
       .append("svg")
@@ -49,39 +60,40 @@ export class TrendPressureComponent implements OnInit {
       .attr("transform", "translate(" + this.margin + "," + this.margin + ")");
   }
 
+  // Draws trend graph using the svg element created for hour vs pressure
   private drawTrend(data: any[]): void {
-    const x = d3.scaleBand()
+
+    // Adds X-axis
+    const x: d3.ScalePoint<string> = d3.scalePoint()
       .domain(data.map(d => d.Time))
       .range([0, this.width])
-
-    const y = d3.scaleLinear()
-      .domain([d3.min(data.map(d => d.pressure)) - 20, d3.max(data.map(d => d.pressure)) + 20])
-      .range([this.height, 0])
-
-    const line = d3.line()
-      .x(d => x(d['Time']))
-      .y(d => y(d['pressure']))
-
     this.svg.append('g')
-      .attr('class', 'x axis')
       .attr('transform', `translate(0, ${this.height})`)
-      .call(d3.axisBottom(x))
+      .call(d3.axisBottom(x).tickFormat(d => this.convertFrom24To12Format(d)))
       .selectAll("text")
       .attr("transform", "translate(-10,0)rotate(-45)")
       .style("text-anchor", "end")
 
+    // Adds Y-axis
+    const y: d3.ScaleLinear<number, number, never> = d3.scaleLinear()
+      .domain([+d3.min(data.map(d => d.pressure)) - 3, +d3.max(data.map(d => d.pressure)) + 3])
+      .range([this.height, 0])
     this.svg.append('g')
-      .attr('class', 'y axis')
       .call(d3.axisLeft(y))
 
+    // Adds Line
+    const line: d3.Line<[number, number]> = d3.line()
+      .x(d => x(d['Time']))
+      .y(d => y(+d['pressure']))
     this.svg.append('path')
       .datum(data)
       .attr('class', 'data-line')
       .style('stroke', '#0077b6')
-      .style('stroke-width', 3)
+      .style('stroke-width', 4)
       .style('fill', "none")
       .attr('d', line)
 
+    // Adds X-axis title
     this.svg.append("text")
       .attr("text-anchor", "middle")
       .attr("x", this.width / 2)
@@ -89,6 +101,7 @@ export class TrendPressureComponent implements OnInit {
       .text("Hour")
       .style('fill', 'white');
 
+    // Adds Y-axis title
     this.svg.append("text")
       .attr("text-anchor", "middle")
       .attr("transform", "rotate(-90)")
@@ -97,6 +110,7 @@ export class TrendPressureComponent implements OnInit {
       .text("Pressure")
       .style('fill', 'white');
 
+    // Adds date to the graph
     this.svg.append("text")
       .attr("text-anchor", "middle")
       .attr("x", this.width / 2)

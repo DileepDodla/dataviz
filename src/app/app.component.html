@@ -1,13 +1,14 @@
 <div class="text-center">
     <div class="my-4">
-        <button class="btn btn-outline-info" (click)="viewCSV()">View Sample Data</button>
+        <a class="btn btn-outline-info"
+            href="https://raw.githubusercontent.com/DileepDodla/dataviz/gh-pages/assets/data.csv" target="_blank">View
+            Sample Data</a>
     </div>
 
     <form>
         <div class="container input-group" style="width: 235px;">
             <label class="input-group-text" for="graphType">Graph Type</label>
-            <select ngModel name="graphType" #graphType="ngModel" class="form-select" id="graphType"
-                (change)="show(graphType)">
+            <select ngModel name="graphType" #graphType="ngModel" class="form-select" id="graphType">
                 <option value="" disabled selected>Choose</option>
                 <option value="table">Table</option>
                 <option value="trend">Trend</option>
