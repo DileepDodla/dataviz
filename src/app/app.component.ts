@@ -7,4 +7,11 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'Data-Visualizer';
+  show(x) { console.log(x.control.value); }
+  viewCSV() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/assets/data.csv');
+    xhr.setRequestHeader('Content-Type', 'text/csv');
+    xhr.send();
+  }
 }
